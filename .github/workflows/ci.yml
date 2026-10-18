@@ -1,0 +1,40 @@
+name: Elite Squash Academy - CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/devops-cicd
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-build:
+    name: Validate website and build Docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Validate website files
+        run: |
+          test -f index.html
+          test -f registration.html
+          test -f style.css
+          test -f script.js
+          echo "Required website files are present."
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: elite-squash-academy:ci
