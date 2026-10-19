@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - feature/devops-cicd
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - main
@@ -41,9 +43,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker image
+      - name: Extract Docker image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/elitesquashacademy/squash-game
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha
+
+      - name: Build and publish Docker image
         uses: docker/build-push-action@v7
         with:
           context: .
           push: ${{ github.event_name == 'push' }}
-          tags: ghcr.io/elitesquashacademy/squash-game:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
