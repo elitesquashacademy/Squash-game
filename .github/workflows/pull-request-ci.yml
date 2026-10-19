@@ -1,0 +1,42 @@
+
+name: Pull Request CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-and-build:
+    name: Validate website and build Docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Validate required website files
+        run: |
+          test -f index.html
+          test -f registration.html
+          test -f style.css
+          test -f script.js
+          echo "All required website files are present."
+
+      - name: Build Docker image
+        run: docker build -t squash-game:pr-test .
+
+      - name: Report success
+        run: echo "Pull request validation and Docker build passed."
